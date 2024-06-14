@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "coursemanagement/proto";
+
+
+package coursemanagement;
+
+service CourseService {
+  rpc GetAllCourses (GetAllCoursesRequest) returns (GetAllCoursesResponse);
+}
+
+message GetAllCoursesRequest {}
+
+message GetAllCoursesResponse {
+  repeated Course courses = 1;
+}
+
+message Course {
+  int32 id = 1;
+  int32 teacher_id = 2;
+  string name = 3;
+}
