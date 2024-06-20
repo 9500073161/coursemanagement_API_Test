@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"coursemanagement/handlers"
+	"coursemanagement/middleware"
 	"coursemanagement/mysqldbmodels"
 	"coursemanagement/statemanager"
 
@@ -68,12 +69,21 @@ func startHTTPServer(sm *statemanager.StateManager) {
 	studentHandler := handlers.NewStudentHandler(sm)
 	teacherHandler := handlers.NewTeacherHandler(sm)
 	enrollmentHandler := handlers.NewEntrollmentHandler(sm)
+	userHandler := &handlers.UserHandler{DBClient: &mysqldbmodels.DBClient{Conn: sm.GetDBConnection()}}
 
 	// Define HTTP routes
-	http.HandleFunc("/course", courseHandler.HandlersCourse)
-	http.HandleFunc("/student", studentHandler.HandlersStudent)
-	http.HandleFunc("/teacher", teacherHandler.HandlersTeacher)
-	http.HandleFunc("/entrollment", enrollmentHandler.HandlersEntrollment)
+	// http.HandleFunc("/course", courseHandler.HandlersCourse)
+	// http.HandleFunc("/student", studentHandler.HandlersStudent)
+	// http.HandleFunc("/teacher", teacherHandler.HandlersTeacher)
+	// http.HandleFunc("/entrollment", enrollmentHandler.HandlersEntrollment)
+	http.HandleFunc("/register", userHandler.RegisterUser)
+	http.HandleFunc("/login", userHandler.LoginUser)
+
+	// Protected routes
+	http.Handle("/course", middleware.JWTAuth(http.HandlerFunc(courseHandler.HandlersCourse)))
+	http.Handle("/student", middleware.JWTAuth(http.HandlerFunc(studentHandler.HandlersStudent)))
+	http.Handle("/teacher", middleware.JWTAuth(http.HandlerFunc(teacherHandler.HandlersTeacher)))
+	http.Handle("/entrollment", middleware.JWTAuth(http.HandlerFunc(enrollmentHandler.HandlersEntrollment)))
 
 	fmt.Println("HTTP server is running on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
